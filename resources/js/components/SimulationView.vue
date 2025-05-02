@@ -466,46 +466,60 @@ export default {
                 "/api/v1/matches/simulate-week"
             );
         },
-        resetData() {
-            this.runSimulationAction("reset", "/api/v1/matches/reset");
+        async resetData() {
+            try {
+                await this.runSimulationAction(
+                    "reset",
+                    "/api/v1/matches/reset"
+                );
+
+                await this.fetchStandings();
+                await this.fetchPredictions();
+            } catch (error) {
+                console.error("Reset failed:", error);
+            }
         },
         runSimulationAction(actionName, apiUrl) {
             this.actionLoading = true;
             this.actionError = null;
             this.currentAction = actionName;
-            axios
-                .post(apiUrl)
-                .then((response) => {
-                    this.updateState(response.data);
-                    if (actionName === "reset") {
-                        // Optionally navigate or give feedback
-                        console.log("Simulation reset.");
-                    }
-                })
-                .catch((error) => {
-                    console.error(`Error during ${actionName}:`, error);
-                    this.actionError =
-                        `Failed to ${actionName
-                            .replace(/([A-Z])/g, " $1")
-                            .toLowerCase()}. ` +
-                        (error.response?.data?.message || error.message);
-                })
-                .finally(() => {
-                    this.actionLoading = false;
-                    this.currentAction = null;
-                });
+
+            return new Promise((resolve, reject) => {
+                axios
+                    .post(apiUrl)
+                    .then((response) => {
+                        this.updateState(response.data);
+                        if (actionName === "reset") {
+                            console.log("Simulation reset.");
+                        }
+                        resolve(response.data);
+                    })
+                    .catch((error) => {
+                        console.error(`Error during ${actionName}:`, error);
+                        this.actionError =
+                            `Failed to ${actionName
+                                .replace(/([A-Z])/g, " $1")
+                                .toLowerCase()}. ` +
+                            (error.response?.data?.message || error.message);
+                        reject(error);
+                    })
+                    .finally(() => {
+                        this.actionLoading = false;
+                        this.currentAction = null;
+                    });
+            });
         },
         updateState(data) {
             // Update component data based on API response
             // Adjust keys based on your actual API response structure
-            this.leagueTable = data.league_table || [];
+            this.leagueTable = data.league_table || this.fetchStandings();
             this.currentMatches = data.current_matches || [];
-            this.predictions = data.predictions || [];
+            this.predictions = data.predictions || this.fetchPredictions();
             this.currentWeek = data.current_week;
             this.simulationComplete = data.simulation_complete || false;
 
             // Assuming simulation actions might return predictions in the same format or an array
-            const preds = data.predictions || [];
+            const preds = data.predictions || this.fetchPredictions();
             if (Array.isArray(preds)) {
                 this.predictions = preds;
             } else if (typeof preds === "object" && preds !== null) {

@@ -23,6 +23,8 @@ class StandingService
 
     public function generateStandingSkeleton()
     {
+        $this->teamStandingRepository->truncate();
+
         $teams = $this->teamRepository->getTeams();
 
         foreach ($teams as $index => $team) {

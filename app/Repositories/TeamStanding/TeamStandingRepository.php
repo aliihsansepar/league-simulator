@@ -31,4 +31,9 @@ class TeamStandingRepository implements TeamStandingRepositoryInterface
 
         return $teamStanding->update($data);
     }
+
+    public function truncate()
+    {
+        return TeamStanding::truncate();
+    }
 }

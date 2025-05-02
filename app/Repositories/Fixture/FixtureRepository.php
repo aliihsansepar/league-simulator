@@ -116,10 +116,17 @@ class FixtureRepository implements FixtureRepositoryInterface
     {
         try {
             if (is_null($week)) {
-                $week = Fixture::where('is_played', false)->min('week');
+                $week = Fixture::where('is_played', true)->max('week') + 1;
+
+                if (empty($week)) {
+                    $week = 1;
+                }
             }
 
-            $fixtures = Fixture::with(['homeTeam', 'awayTeam'])->where('week', '>', $week)->get();
+            $fixtures = Fixture::with(['homeTeam', 'awayTeam'])
+                ->where('is_played', false)
+                ->where('week', '>=', $week)
+                ->get();
 
             if (empty($fixtures)) {
                 throw new \Exception('Fixtures not found');

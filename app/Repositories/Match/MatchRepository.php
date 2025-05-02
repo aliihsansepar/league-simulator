@@ -3,9 +3,16 @@
 namespace App\Repositories\Match;
 
 use App\Models\Matches;
+use App\Services\Fixture\FixtureService;
+use App\Services\TeamStandings\StandingService;
 
 class MatchRepository implements MatchRepositoryInterface
 {
+    public function __construct(
+        private StandingService $standingService,
+        private FixtureService $fixtureService
+    ) {}
+
     public function getAll()
     {
         return Matches::with('fixture')->get();
@@ -37,5 +44,7 @@ class MatchRepository implements MatchRepositoryInterface
     public function reset(): void
     {
         Matches::truncate();
+        $this->standingService->generateStandingSkeleton();
+        $this->fixtureService->reset();
     }
 }
