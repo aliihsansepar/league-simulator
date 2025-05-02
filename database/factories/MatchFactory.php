@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\Season;
-use App\Models\Team;
+use App\Models\Fixture;
+use App\Models\Matches;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class MatchFactory extends Factory
 {
+    protected $model = Matches::class;
+
     /**
      * Define the model's default state.
      *
@@ -19,12 +21,9 @@ class MatchFactory extends Factory
     public function definition(): array
     {
         return [
-            'season_id' => Season::factory(),
-            'home_team_id' => Team::factory(),
-            'away_team_id' => Team::factory(),
-            'match_date' => fake()->dateTimeBetween('-4 weeks', 'now'),
-            'home_goals' => fake()->numberBetween(0, 10),
-            'away_goals' => fake()->numberBetween(0, 10),
+            'fixture_id' => Fixture::factory(),
+            'home_score' => fake()->numberBetween(0, 5),
+            'away_score' => fake()->numberBetween(0, 5),
             'is_played' => fake()->boolean(),
         ];
     }

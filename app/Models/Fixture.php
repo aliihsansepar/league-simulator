@@ -9,31 +9,38 @@ class Fixture extends Model
 {
     use HasFactory;
 
+    protected $table = 'fixtures';
+
     protected $fillable = [
-        'home_team_id',
-        'away_team_id',
-        'home_team_goals',
-        'away_team_goals',
+        'home_id',
+        'away_id',
+        'date',
+        'week',
         'is_played',
     ];
 
-    public function season()
-    {
-        return $this->belongsTo(Season::class);
-    }
-
-    public function match()
-    {
-        return $this->belongsTo(Matches::class);
-    }
-
     public function homeTeam()
     {
-        return $this->belongsTo(Team::class, 'home_team_id', 'id');
+        return $this->hasOne(Team::class, 'id', 'home_id');
     }
 
     public function awayTeam()
     {
-        return $this->belongsTo(Team::class, 'away_team_id', 'id');
+        return $this->hasOne(Team::class, 'id', 'away_id');
+    }
+
+    public function match()
+    {
+        return $this->hasOne(Matches::class, 'fixture_id', 'id');
+    }
+
+    public function isNotPlayed()
+    {
+        return $this->where('is_played', false);
+    }
+
+    public function isPlayed()
+    {
+        return $this->where('is_played', true);
     }
 }

@@ -1,0 +1,18 @@
+FROM node:20-alpine
+
+WORKDIR /var/www
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Set correct permissions for node_modules
+RUN mkdir -p node_modules/.vite && chmod -R 777 node_modules/.vite
+
+# Expose port for Vite dev server
+EXPOSE 5173
+
+# Run development server
+CMD ["npm", "run", "dev"]
