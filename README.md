@@ -45,19 +45,19 @@ A brief description of what this project does. (Replace with actual description)
 4.  **Install PHP dependencies:**
 
     ```bash
-    docker-compose exec app composer install
+    docker-compose exec api composer install
     ```
 
 5.  **Generate application key:**
 
     ```bash
-    docker-compose exec app php artisan key:generate
+    docker-compose exec api php artisan key:generate
     ```
 
 6.  **Run database migrations:**
 
     ```bash
-    docker-compose exec app php artisan migrate --seed
+    docker-compose exec api php artisan migrate --seed
     ```
 
 7.  **Install Node.js dependencies and build assets:**
