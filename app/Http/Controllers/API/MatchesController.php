@@ -24,11 +24,7 @@ class MatchesController extends Controller
 
     public function simulateWeek(SimulateWeekRequest $request)
     {
-        $week = $request->input('week');
-
-        if (empty($week)) {
-            $week = null;
-        }
+        $week = $request->validated('week');
 
         return $this->simulationService->simulateWeek($week);
     }

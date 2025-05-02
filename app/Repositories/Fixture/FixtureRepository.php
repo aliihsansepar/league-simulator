@@ -58,7 +58,7 @@ class FixtureRepository implements FixtureRepositoryInterface
     public function getFixtureByWeek(int $week): Collection
     {
         try {
-            $fixtures = Fixture::with(['homeTeam', 'awayTeam'])->where('week', $week)->get();
+            $fixtures = Fixture::with(['homeTeam', 'awayTeam', 'match'])->where('week', $week)->get();
 
             if (empty($fixtures)) {
                 throw new \Exception('Fixtures not found');

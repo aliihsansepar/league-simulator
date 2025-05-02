@@ -22,13 +22,14 @@ class SimulateWeekRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'week' => 'sometimes|integer|min:1|max:38',
+            'week' => 'required|integer|min:1|max:38',
         ];
     }
 
     public function messages(): array
     {
         return [
+            'week.required' => 'Week is required',
             'week.integer' => 'Week must be an integer',
             'week.min' => 'Week must be at least 1',
             'week.max' => 'Week must be at most 38',

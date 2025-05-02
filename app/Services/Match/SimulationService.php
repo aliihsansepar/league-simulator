@@ -68,9 +68,9 @@ class SimulationService
         event(new MatchCompleted($fixture, $homeTeam, $awayTeam, $homeTeamGoals, $awayTeamGoals));
     }
 
-    public function simulateWeek(?int $week = null): void
+    public function simulateWeek(int $week): void
     {
-        $fixtures = $this->fixtureRepository->getNextWeekFixture($week);
+        $fixtures = $this->fixtureRepository->getFixtureByWeek($week);
 
         foreach ($fixtures as $fixture) {
             $this->simulateFixture($fixture);

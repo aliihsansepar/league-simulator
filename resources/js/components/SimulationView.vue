@@ -227,19 +227,73 @@
                             <div
                                 v-for="match in currentMatches"
                                 :key="match.id"
-                                class="flex justify-between items-center py-1"
+                                class="p-2 bg-gray-50 rounded-lg mb-2 shadow-sm hover:shadow-md transition-all"
                             >
-                                <span
-                                    class="text-right w-2/5 truncate text-gray-700 font-medium"
-                                    >{{ match.home_team.name }}</span
-                                >
-                                <span class="text-gray-400 font-bold mx-1"
-                                    >-</span
-                                >
-                                <span
-                                    class="text-left w-2/5 truncate text-gray-700 font-medium"
-                                    >{{ match.away_team.name }}</span
-                                >
+                                <div class="flex justify-between items-center">
+                                    <!-- Home Team -->
+                                    <div class="w-5/12 text-right">
+                                        <span
+                                            class="font-medium text-gray-800 truncate"
+                                            >{{
+                                                match.home_team.short_name
+                                            }}</span
+                                        >
+                                    </div>
+
+                                    <!-- Score Box -->
+                                    <div
+                                        class="flex items-center justify-center w-2/12 bg-white rounded-md shadow-inner px-2 py-1"
+                                    >
+                                        <span
+                                            v-if="
+                                                match.match &&
+                                                (match.match.home_score !==
+                                                    undefined ||
+                                                    match.match.away_score !==
+                                                        undefined)
+                                            "
+                                            class="font-bold text-sm text-green-600"
+                                            >{{ match.match.home_score }}</span
+                                        >
+                                        <span
+                                            v-if="
+                                                match.match &&
+                                                (match.match.home_score !==
+                                                    undefined ||
+                                                    match.match.away_score !==
+                                                        undefined)
+                                            "
+                                            class="text-gray-400 font-bold mx-1"
+                                            >-</span
+                                        >
+                                        <span
+                                            v-if="
+                                                match.match &&
+                                                (match.match.home_score !==
+                                                    undefined ||
+                                                    match.match.away_score !==
+                                                        undefined)
+                                            "
+                                            class="font-bold text-sm text-green-600"
+                                            >{{ match.match.away_score }}</span
+                                        >
+                                        <span
+                                            v-else
+                                            class="text-xs text-gray-500"
+                                            >vs</span
+                                        >
+                                    </div>
+
+                                    <!-- Away Team -->
+                                    <div class="w-5/12 text-left">
+                                        <span
+                                            class="font-medium text-gray-800 truncate"
+                                            >{{
+                                                match.away_team.short_name
+                                            }}</span
+                                        >
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div
@@ -339,7 +393,7 @@
                         }"
                         class="-ml-1 mr-2 h-4 w-4"
                     />
-                    Play Next Week
+                    Play Week {{ currentWeek }}
                 </button>
                 <button
                     @click="playAllWeeks"
@@ -418,7 +472,7 @@ export default {
             leagueTable: [],
             currentMatches: [],
             predictions: [],
-            currentWeek: null,
+            currentWeek: 1, // Default to week 1
             simulationComplete: false,
             loading: false,
             error: null, // Initial load error
@@ -429,6 +483,7 @@ export default {
     },
     mounted() {
         this.fetchStandings();
+        this.fetchFixtures();
         this.fetchPredictions();
     },
     methods: {
@@ -461,9 +516,14 @@ export default {
             );
         },
         playNextWeek() {
+            const weekToPlay = this.currentWeek;
+            // Increment current week immediately for UI update
+            this.currentWeek++;
+
             this.runSimulationAction(
                 "playNext",
-                "/api/v1/matches/simulate-week"
+                "/api/v1/matches/simulate-week",
+                { week: weekToPlay }
             );
         },
         async resetData() {
@@ -473,24 +533,31 @@ export default {
                     "/api/v1/matches/reset"
                 );
 
+                // Reset currentWeek to 1 after simulation reset
+                this.currentWeek = 1;
+
                 await this.fetchStandings();
                 await this.fetchPredictions();
             } catch (error) {
                 console.error("Reset failed:", error);
             }
         },
-        runSimulationAction(actionName, apiUrl) {
+        runSimulationAction(actionName, apiUrl, params = {}) {
             this.actionLoading = true;
             this.actionError = null;
             this.currentAction = actionName;
 
             return new Promise((resolve, reject) => {
                 axios
-                    .post(apiUrl)
+                    .post(apiUrl, params)
                     .then((response) => {
                         this.updateState(response.data);
                         if (actionName === "reset") {
                             console.log("Simulation reset.");
+                            this.currentWeek = 1;
+                        } else if (actionName === "playNext") {
+                            // Increment week after successful simulation
+                            this.currentWeek++;
                         }
                         resolve(response.data);
                     })
@@ -513,10 +580,20 @@ export default {
             // Update component data based on API response
             // Adjust keys based on your actual API response structure
             this.leagueTable = data.league_table || this.fetchStandings();
-            this.currentMatches = data.current_matches || [];
+            this.currentMatches = data.current_matches || this.fetchFixtures();
             this.predictions = data.predictions || this.fetchPredictions();
-            this.currentWeek = data.current_week;
+
+            // Update current week from API if provided
+            if (data.current_week) {
+                this.currentWeek = data.current_week;
+            }
+
             this.simulationComplete = data.simulation_complete || false;
+
+            // If simulation is complete, ensure currentWeek reflects total weeks
+            if (this.simulationComplete && data.total_weeks) {
+                this.currentWeek = data.total_weeks;
+            }
 
             // Assuming simulation actions might return predictions in the same format or an array
             const preds = data.predictions || this.fetchPredictions();
@@ -572,6 +649,13 @@ export default {
                     this.predictions = []; // Clear predictions on error
                     // Optionally show a global alert for prediction fetch error
                     // emitter.emit('show-alert', { type: 'error', message: 'Failed to load predictions.' });
+                });
+        },
+        fetchFixtures() {
+            axios
+                .get("/api/v1/fixtures/" + this.currentWeek)
+                .then((response) => {
+                    this.currentMatches = response.data.data;
                 });
         },
     },
