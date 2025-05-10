@@ -150,6 +150,7 @@ export default {
                         message: "Fixtures reset successfully.",
                     });
                     this.fetchTeams();
+                    this.$router.push({ name: "FixturesList" });
                 })
                 .catch((error) => {
                     console.error("Error resetting fixtures:", error);

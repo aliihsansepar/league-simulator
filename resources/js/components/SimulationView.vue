@@ -642,10 +642,11 @@ export default {
     },
     computed: {
         isLeagueComplete() {
-            return this.currentWeek >= this.maxWeek;
+            return this.currentWeek > this.maxWeek;
         },
         completionPercentage() {
-            if (this.maxWeek === 0) return 0;
+            if (this.maxWeek === 0 || this.currentWeek === 1) return 0;
+
             return Math.min(
                 Math.round((this.currentWeek / this.maxWeek) * 100),
                 100
@@ -688,10 +689,16 @@ export default {
                 });
         },
         playAllWeeks() {
+            this.currentWeek = 6;
+            localStorage.setItem("currentWeek", this.currentWeek); // LocalStorage'ı güncelle
+
             this.runSimulationAction(
                 "playAll",
                 "/api/v1/matches/simulate-season"
             );
+
+            // Önceki hafta verilerini güncelle
+            this.fetchPreviousFixtures();
         },
         playNextWeek() {
             const weekToPlay = this.currentWeek;
@@ -801,7 +808,7 @@ export default {
                 );
 
                 // Lig tamamlandı mı kontrol et
-                if (this.currentWeek >= this.maxWeek) {
+                if (this.currentWeek > this.maxWeek) {
                     this.simulationComplete = true;
                 }
             }
@@ -814,7 +821,7 @@ export default {
             }
 
             // Eğer currentWeek maxWeek'e ulaştıysa simülasyon tamamlanmış olarak işaretleyelim
-            if (this.currentWeek >= this.maxWeek && this.maxWeek > 0) {
+            if (this.currentWeek > this.maxWeek && this.maxWeek > 0) {
                 this.simulationComplete = true;
             } else {
                 // API'den gelen değeri kullan
@@ -869,7 +876,7 @@ export default {
                     );
 
                     // Lig tamamlandı mı kontrol et
-                    if (this.currentWeek >= this.maxWeek) {
+                    if (this.currentWeek > this.maxWeek) {
                         this.simulationComplete = true;
                     }
                 }
